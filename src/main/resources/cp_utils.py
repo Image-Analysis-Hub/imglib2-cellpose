@@ -30,8 +30,11 @@
 # OF THE POSSIBILITY OF SUCH DAMAGE.
 # #L%
 ###
+
+# These imports are required for Appose calls to work on Windows platforms.
 import numpy as np
-from cellpose import models, io
+from cellpose import models
+
 import torch
 
 def get_torch_device(use_gpu: bool) -> tuple[bool, torch.device]:
