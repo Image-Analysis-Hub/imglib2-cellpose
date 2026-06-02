@@ -601,8 +601,7 @@ public class CellposeDimensionalitiesTest
 	private static void skipIfTestThresholdLessThan( final int minimum )
 	{
 		final String thresholdValue = System.getenv( "TEST_THRESHOLD" );
-		//final int threshold = thresholdValue == null ? 0 : Integer.parseInt( thresholdValue );
-		final int threshold = 30;
+		final int threshold = thresholdValue == null ? 0 : Integer.parseInt( thresholdValue );
 		assumeTrue( threshold >= minimum );
   }
 
