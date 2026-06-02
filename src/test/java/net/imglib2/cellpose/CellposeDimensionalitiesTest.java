@@ -494,9 +494,9 @@ public class CellposeDimensionalitiesTest
 		assertEquals( "For case " + caseName + ": " + imageName + " output and input must have the same T size.", inputTimepoints, outputTimepoints );
 	}
 
-	private static final long X_SIZE = 156;
+	private static final long X_SIZE = 80;
 
-	private static final long Y_SIZE = 128;
+	private static final long Y_SIZE = 96;
 
 	private static final long Z_SIZE = 11;
 
@@ -601,7 +601,8 @@ public class CellposeDimensionalitiesTest
 	private static void skipIfTestThresholdLessThan( final int minimum )
 	{
 		final String thresholdValue = System.getenv( "TEST_THRESHOLD" );
-		final int threshold = thresholdValue == null ? 0 : Integer.parseInt( thresholdValue );
+		//final int threshold = thresholdValue == null ? 0 : Integer.parseInt( thresholdValue );
+		final int threshold = 30;
 		assumeTrue( threshold >= minimum );
   }
 
