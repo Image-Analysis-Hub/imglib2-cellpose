@@ -31,6 +31,7 @@
 # #L%
 ###
 import numpy as np
+from cellpose import models, io
 import torch
 
 def get_torch_device(use_gpu: bool) -> tuple[bool, torch.device]:
