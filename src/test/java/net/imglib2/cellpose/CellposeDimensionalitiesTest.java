@@ -498,7 +498,7 @@ public class CellposeDimensionalitiesTest
 
 	private static final long Y_SIZE = 128;
 
-	private static final long Z_SIZE = 16;
+	private static final long Z_SIZE = 11;
 
 	private static final long C_SIZE = 2;
 
