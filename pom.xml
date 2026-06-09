@@ -15,11 +15,11 @@
 
 	<name>ImgLib2 Cellpose</name>
 	<description>Running Cellpose 3 and 4 from Java with Appose, using ImgLib2 data structure.</description>
-	<url>http://mycompany.com/imagej/bio-formats-reader/</url>
+	<url>https://imglib2.net/</url>
 	<inceptionYear>2026</inceptionYear>
 	<organization>
-		<name>My Company</name>
-		<url>http://mycompany.com/</url>
+		<name>ImgLib2</name>
+		<url>https://imglib2.net/</url>
 	</organization>
 	<licenses>
 		<license>
