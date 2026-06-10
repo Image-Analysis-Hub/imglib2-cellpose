@@ -40,11 +40,11 @@ torchvision = { version = ">=0.17.2, <0.26", index = "https://download.pytorch.o
 
 # CUDA 12.6: Linux/Windows use cu128 index, macOS falls back to CPU
 [feature.cu128.target.linux.pypi-dependencies]
-torch = { version = ">=2.9, <2.11", index = "https://download.pytorch.org/whl/cu128" }
+torch = { version = ">=2.9, <2.11", index = "https://download.pytorch.org/whl/cu126" }
 torchvision = { version = ">=0.24, <0.26", index = "https://download.pytorch.org/whl/cu126" }
 
 [feature.cu128.target.win.pypi-dependencies]
-torch = { version = ">=2.9, <2.11", index = "https://download.pytorch.org/whl/cu128" }
+torch = { version = ">=2.9, <2.11", index = "https://download.pytorch.org/whl/cu126" }
 torchvision = { version = ">=0.24, <0.26", index = "https://download.pytorch.org/whl/cu126" }
 
 [feature.cu128.target.osx-arm64.pypi-dependencies]
