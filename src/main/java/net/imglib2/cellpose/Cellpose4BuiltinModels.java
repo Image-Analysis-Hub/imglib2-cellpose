@@ -36,7 +36,7 @@ public enum Cellpose4BuiltinModels
 {
 	// General  models
 	CPSAM( "cpsam", "Cellpose-SAM model. General model, works well on most data." ),
-	CPSAMV2( "cpsam_v2", "Cellpose-SAM model released in June 2026. It handles better low contrast regions" ),
+	CPSAMV2( "cpsam_v2", "Cellpose-SAM model released in June 2026. It handles better low contrast regions" );
 	//CPDINO( "cpdino", "CellposeDINO model, based on DINO backbone. For RGB images."),
 	//CPDINOVITB( "cpdino-vitb", "CellposeDINO smaller model, based on DINO backbone. For RGB images.");
 	
