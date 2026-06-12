@@ -11,11 +11,10 @@ version = "0.1.0"
 
 [dependencies]
 python = ">=3.10.3,<3.13"
+packaging = ">=26.2,<27"
 wheel = "*"
 hatchling = "*"
 cmake = "*"
-packaging = ">=26.2,<27"
-numpy = ">=2.4.6,<3"
 
 [pypi-dependencies]
 appose = ">=0.10.1, <0.12"
@@ -80,7 +79,7 @@ torchvision = { version = ">=0.17.2, <0.26", index = "https://download.pytorch.o
 
 # --- CellPose version features ---
 [feature.cp3.pypi-dependencies]
-cellpose = ">=3, <4"
+cellpose = ">=3.1, <4"
 
 [feature.cp4.pypi-dependencies]
 cellpose = ">=4, <5"
