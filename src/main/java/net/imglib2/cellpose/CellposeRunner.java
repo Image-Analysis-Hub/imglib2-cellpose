@@ -157,7 +157,7 @@ public class CellposeRunner< T extends RealType< T > & NativeType< T >, R extend
 
 		// Benchmark.
 		final long end = System.currentTimeMillis();
-		listener.message( "Cellpose finished in " + ( end - start ) / 1000. + " s" );
+		listener.message( "Model inference done in " + ( end - start ) / 1000. + " s" );
 	}
 
 	/**
@@ -204,7 +204,7 @@ public class CellposeRunner< T extends RealType< T > & NativeType< T >, R extend
 
 		// Benchmark.
 		final long end = System.currentTimeMillis();
-		listener.message( "Cellpose finished in " + ( end - start ) / 1000. + " s" );
+		listener.message( "Cellpose initialization done in " + ( end - start ) / 1000. + " s" );
 		
 		// The runner script
 		this.cellposeScript = IOUtils.toString( Cellpose.class.getResource( pythonScriptPath ), StandardCharsets.UTF_8 );
