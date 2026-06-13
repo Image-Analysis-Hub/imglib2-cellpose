@@ -167,7 +167,7 @@ public interface ApposeTaskListener
 
 		private void error( final String msg )
 		{
-			System.out.println( msg );
+			System.err.println( msg );
 		}
 
 		@Override
