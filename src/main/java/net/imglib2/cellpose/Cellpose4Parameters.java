@@ -35,6 +35,7 @@ package net.imglib2.cellpose;
 import java.util.Map;
 
 import net.imglib2.appose.ShmImg;
+import net.imglib2.cellpose.Cellpose3Parameters.Builder;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.IntegerType;
 import net.imglib2.type.numeric.RealType;
@@ -42,7 +43,8 @@ import net.imglib2.type.numeric.integer.UnsignedByteType;
 
 public class Cellpose4Parameters extends CellposeParameters
 {
-
+	public final Cellpose4BuiltinModels buitInModel;
+	
 	public final Integer chan0; // as Integer so that it can be null
 
 	public final Integer chan1;
@@ -50,6 +52,7 @@ public class Cellpose4Parameters extends CellposeParameters
 	public final Integer chan2;
 
 	private Cellpose4Parameters(
+			final Cellpose4BuiltinModels buitInModel,
 			final Integer chan0,
 			final Integer chan1,
 			final Integer chan2,
@@ -75,6 +78,7 @@ public class Cellpose4Parameters extends CellposeParameters
 				cellProbThreshold, useGpu, minSize, anisotropy,
 				stitchThreshold, resample, tileOverlap, computeFlows,
 				flow3dSmooth, nIter, torchVersion );
+		this.buitInModel = buitInModel;
 		this.chan0 = chan0;
 		this.chan1 = chan1;
 		this.chan2 = chan2;
@@ -87,7 +91,10 @@ public class Cellpose4Parameters extends CellposeParameters
 			final ShmImg< R > outputLabels,
 			final ShmImg< UnsignedByteType > outputFlows )
 	{
+		
 		final Map< String, Object > inputs = super.toApposeMap( input, axisInfo, outputLabels, outputFlows );
+		final boolean isBuiltInModel = customModel == null || customModel.equals( "" );
+		inputs.put( "model_name", isBuiltInModel ? buitInModel.modelName() : null );
 
 		final long nChannels = axisInfo.nChannels( input );
 		inputs.put( "n_channels", nChannels );
@@ -106,6 +113,13 @@ public class Cellpose4Parameters extends CellposeParameters
 	// Builder class for fluent construction
 	public static class Builder extends CellposeParameters.Builder< Builder >
 	{
+		private Cellpose4BuiltinModels model = Cellpose4BuiltinModels.CPSAMV2;
+		
+		public Builder model( final Cellpose4BuiltinModels model )
+		{
+			this.model = model;
+			return this;
+		}
 
 		private Integer chan0 = 0;  // to have one selected by default
 
@@ -135,7 +149,7 @@ public class Cellpose4Parameters extends CellposeParameters
 		public Cellpose4Parameters build()
 		{
 			return new Cellpose4Parameters(
-					chan0, chan1, chan2, customModel, diameter, do3D, normalize,
+					model, chan0, chan1, chan2, customModel, diameter, do3D, normalize,
 					flowThreshold, cellProbThreshold, useGpu, minSize,
 					anisotropy, stitchThreshold, resample, tileOverlap,
 					computeFlows, flow3dSmooth, nIter, torchVersion );

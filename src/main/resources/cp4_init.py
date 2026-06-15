@@ -50,9 +50,10 @@ else:
 # load arguments and input from Appose task
 if appose_mode:
     use_gpu: bool = globals()['use_gpu']
-    selected_model = "cpsam" if custom_model is None else custom_model
+    selected_model = model_name if custom_model is None else custom_model
 else:
     custom_model = None
+    model_name = "cpsam_v2"
     use_gpu = False
 
 use_gpu, device = get_torch_device(use_gpu)
@@ -60,7 +61,7 @@ use_gpu, device = get_torch_device(use_gpu)
 task.update(
     current = 1,
     maximum= 2,
-    message=f"CP4: Start Cellpose (device={device}): deploy model {selected_model if selected_model else custom_model}"
+    message=f"CP4: Start Cellpose (device={device}): deploy model {selected_model}"
 )
 
 model = models.CellposeModel(
