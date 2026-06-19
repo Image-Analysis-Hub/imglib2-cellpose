@@ -207,7 +207,7 @@ public class CellposeRunner< T extends RealType< T > & NativeType< T >, R extend
 		listener.message( "Cellpose initialization done in " + ( end - start ) / 1000. + " s" );
 		
 		// Inform listener that initialization (env creation, model initialization) is done
-				listener.message( "#Flag: initialization done" );
+		listener.message( "#Flag: initialization done" );
 		
 		// The runner script
 		this.cellposeScript = IOUtils.toString( Cellpose.class.getResource( pythonScriptPath ), StandardCharsets.UTF_8 );
