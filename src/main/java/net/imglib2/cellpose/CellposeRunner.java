@@ -182,10 +182,9 @@ public class CellposeRunner< T extends RealType< T > & NativeType< T >, R extend
 				.subscribeProgress( listener.progressListener() )
 				.subscribeOutput( listener.outputListener() )
 				.subscribeError( listener.errorListener() )
-				.environment( envName )
 				.build();
 		final String utilsScript = IOUtils.toString( Cellpose.class.getResource( "/cp_utils.py" ), StandardCharsets.UTF_8 );
-		this.python = env.python().init( utilsScript );
+		this.python = env.activate(envName).python().init( utilsScript );
 
 		// The Python initialization task.
 		final String cellposeInitScript =  IOUtils.toString( Cellpose.class.getResource( pythonInitScriptPath ), StandardCharsets.UTF_8 );
