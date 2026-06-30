@@ -15,7 +15,7 @@ packaging = ">=26.2,<27"
 wheel = "*"
 hatchling = "*"
 cmake = "*"
-setuptools = "*"
+llvm = "*"
 
 [pypi-dependencies]
 appose = ">=0.10.1, <0.12"
