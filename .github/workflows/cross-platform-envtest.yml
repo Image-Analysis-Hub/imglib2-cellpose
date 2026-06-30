@@ -15,16 +15,12 @@ jobs:
     strategy:
       fail-fast: false # Allows other matrix jobs to complete even if one fails
       matrix:
-        #os: [ubuntu-latest, windows-latest, macos-latest, macos-15-intel]
-        os: [ macos-15-intel]
+        os: [ubuntu-latest, windows-latest, macos-latest, macos-15-intel]
         java: [21] # Test with different Java LTS versions
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
-          #- name: Set up Xcode
-          #if: runner.os == 'macOS'
-          #run: brew install llvm 
 
       - name: Set up JDK ${{ matrix.java }}
         uses: actions/setup-java@v4
