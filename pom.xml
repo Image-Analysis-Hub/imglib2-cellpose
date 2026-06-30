@@ -11,7 +11,7 @@
 
 	<groupId>net.imglib2</groupId>
 	<artifactId>imglib2-cellpose</artifactId>
-	<version>0.0.7-SNAPSHOT</version>
+	<version>0.0.7</version>
 
 	<name>ImgLib2 Cellpose</name>
 	<description>Running Cellpose 3 and 4 from Java with Appose, using ImgLib2 data structure.</description>
@@ -80,7 +80,7 @@
 	<scm>
 		<connection>scm:git:https://github.com/imglib/imglib2-cellpose</connection>
 		<developerConnection>scm:git:git@github.com:imglib/imglib2-cellpose</developerConnection>
-		<tag>HEAD</tag>
+		<tag>imglib2-cellpose-0.0.7</tag>
 		<url>https://github.com/imglib/imglib2-cellpose</url>
 	</scm>
 	<issueManagement>
