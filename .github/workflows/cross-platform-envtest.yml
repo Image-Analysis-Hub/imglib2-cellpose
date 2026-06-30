@@ -23,7 +23,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
       - name: Set up Xcode
-        if: runner.os == 'Windows'
+        if: runner.os == 'macOS'
         run: brew install xcode
 
       - name: Set up JDK ${{ matrix.java }}

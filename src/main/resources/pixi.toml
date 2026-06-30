@@ -12,12 +12,9 @@ version = "0.1.0"
 [dependencies]
 python = ">=3.10.3,<3.13"
 packaging = ">=26.2,<27"
-#setuptools = "*"
-#wheel = "*"
+wheel = "*"
 hatchling = "*"
-setuptools = ">=65.0" 
-cmake = ">=4.3.0,<5"
-wheel = ">=0.46.3,<0.47"
+cmake = "*"
 
 [pypi-dependencies]
 appose = ">=0.10.1, <0.12"
