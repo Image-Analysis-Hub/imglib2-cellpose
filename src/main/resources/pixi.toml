@@ -16,6 +16,7 @@ wheel = "*"
 hatchling = "*"
 cmake = "*"
 llvmlite = "*"
+numpy = "*"
 
 [pypi-dependencies]
 appose = ">=0.10.1, <0.12"
