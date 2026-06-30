@@ -81,7 +81,7 @@ torchvision = { version = ">=0.17.2, <0.26", index = "https://download.pytorch.o
 # --- CellPose version features ---
 [feature.cp3.pypi-dependencies]
 cellpose = ">=3.1, <4"
-numpy = "<2.1"
+numpy = "<2"
 
 [feature.cp4.pypi-dependencies]
 cellpose = ">=4, <5"
