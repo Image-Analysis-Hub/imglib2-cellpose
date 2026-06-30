@@ -19,7 +19,6 @@ llvmlite = "*"
 
 [pypi-dependencies]
 appose = ">=0.10.1, <0.12"
-numpy = "<2.1"
 
 # --- PyTorch features ---
 # See for more details on torch versions and CUDA support: https://pytorch.org/get-started/previous-versions/
@@ -82,6 +81,7 @@ torchvision = { version = ">=0.17.2, <0.26", index = "https://download.pytorch.o
 # --- CellPose version features ---
 [feature.cp3.pypi-dependencies]
 cellpose = ">=3.1, <4"
+numpy = "<2.1"
 
 [feature.cp4.pypi-dependencies]
 cellpose = ">=4, <5"
