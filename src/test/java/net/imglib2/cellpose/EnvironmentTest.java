@@ -24,7 +24,7 @@ public class EnvironmentTest
 {
 	
 	@Test 
-	public void createEnvironment()
+	public void createEnvironmentCP3()
 	{
 		int[] dims = new int[] { 300, 300 };
 		try {
@@ -58,7 +58,47 @@ public class EnvironmentTest
 		}
 		catch ( BuildException | IOException | InterruptedException | TaskException e )
 		{
-			Assert.fail("Got an exception when installing environment: "+e);
+			Assert.fail("Got an exception when installing environment CP3: "+e);
+			e.printStackTrace();
+		}
+	
+	}
+
+	@Test 
+	public void createEnvironmentCP4()
+	{
+		int[] dims = new int[] { 300, 300 };
+		try {
+			ShmImg<UnsignedByteType> shimg = new ShmImg<>( new UnsignedByteType(), dims );
+			ShmImg<UnsignedByteType> shout = new ShmImg<>( new UnsignedByteType(), dims );
+			
+		
+			final Cellpose4Parameters params = Cellpose4Parameters.builder()
+				.model( Cellpose4BuiltinModels.CPSAM )
+				.computeFlows( false )
+				.build();
+			final String envName = "cp4-cpu";
+			final String pythonScriptPath = "/cp4.py";
+			final String pythonInitScriptPath = "/cp4_init.py";
+		
+			CellposeRunner<UnsignedByteType, UnsignedByteType> cprun = new CellposeRunner<>(
+					params,
+					pythonInitScriptPath,
+					pythonScriptPath,
+					envName,
+					ApposeTaskListener.STD,
+					shimg,
+					AxisInfo.XY,
+					shout,
+					null );
+			
+				cprun.init();
+				cprun.close();
+			
+		}
+		catch ( BuildException | IOException | InterruptedException | TaskException e )
+		{
+			Assert.fail("Got an exception when installing environment CP4: "+e);
 			e.printStackTrace();
 		}
 	
