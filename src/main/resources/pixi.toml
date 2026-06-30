@@ -16,7 +16,7 @@ setuptools = "*"
 wheel = "*"
 hatchling = "*"
 cmake = "*"
-llvm = "*"
+llvm-dev = "*"
 
 [pypi-dependencies]
 appose = ">=0.10.1, <0.12"
