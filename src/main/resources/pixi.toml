@@ -15,6 +15,7 @@ packaging = ">=26.2,<27"
 wheel = "*"
 hatchling = "*"
 cmake = "*"
+llvmlite = "*"
 
 [pypi-dependencies]
 appose = ">=0.10.1, <0.12"
@@ -80,6 +81,8 @@ torchvision = { version = ">=0.17.2, <0.26", index = "https://download.pytorch.o
 # --- CellPose version features ---
 [feature.cp3.pypi-dependencies]
 cellpose = ">=3.1, <4"
+[feature.cp3.target.osx-64.pypi-dependencies]
+numpy = "<2"
 
 [feature.cp4.pypi-dependencies]
 cellpose = ">=4, <5"
