@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false # Allows other matrix jobs to complete even if one fails
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest, macos-13]
+        os: [ubuntu-latest, windows-latest, macos-latest, macos-14]
         java: [21] # Test with different Java LTS versions
 
     steps:
