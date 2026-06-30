@@ -3,7 +3,7 @@ name: Run EnvironmentTest Cross-Platform
 on:
   push:
     branches:
-      - createenv 
+      - main 
   pull_request:
     branches:
       - main
