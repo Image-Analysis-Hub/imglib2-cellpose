@@ -33,21 +33,14 @@
 package net.imglib2.cellpose;
 
 import java.io.IOException;
-import java.net.http.WebSocket.Listener;
 
 import org.apposed.appose.BuildException;
 import org.apposed.appose.TaskException;
 import org.junit.Assert;
 import org.junit.Test;
 
-import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.appose.ShmImg;
-import net.imglib2.img.Img;
-import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
-import net.imglib2.type.numeric.integer.UnsignedShortType;
-import net.imglib2.view.IntervalView;
-import net.imglib2.view.Views;
 
 /**
  * JUnit tests that check that the appose environment are correctly installed/activated.
@@ -58,10 +51,10 @@ public class EnvironmentTest
 	@Test 
 	public void createEnvironmentCP3()
 	{
-		int[] dims = new int[] { 300, 300 };
+		final int[] dims = new int[] { 300, 300 };
 		try {
-			ShmImg<UnsignedByteType> shimg = new ShmImg<>( new UnsignedByteType(), dims );
-			ShmImg<UnsignedByteType> shout = new ShmImg<>( new UnsignedByteType(), dims );
+			final ShmImg<UnsignedByteType> shimg = new ShmImg<>( new UnsignedByteType(), dims );
+			final ShmImg<UnsignedByteType> shout = new ShmImg<>( new UnsignedByteType(), dims );
 			
 		
 			final Cellpose3Parameters params = Cellpose3Parameters.builder()
@@ -73,7 +66,7 @@ public class EnvironmentTest
 			final String pythonScriptPath = "/cp3.py";
 			final String pythonInitScriptPath = "/cp3_init.py";
 		
-			CellposeRunner<UnsignedByteType, UnsignedByteType> cprun = new CellposeRunner<>(
+			final CellposeRunner<UnsignedByteType, UnsignedByteType> cprun = new CellposeRunner<>(
 					params,
 					pythonInitScriptPath,
 					pythonScriptPath,
@@ -99,10 +92,10 @@ public class EnvironmentTest
 	@Test 
 	public void createEnvironmentCP4()
 	{
-		int[] dims = new int[] { 300, 300 };
+		final int[] dims = new int[] { 300, 300 };
 		try {
-			ShmImg<UnsignedByteType> shimg = new ShmImg<>( new UnsignedByteType(), dims );
-			ShmImg<UnsignedByteType> shout = new ShmImg<>( new UnsignedByteType(), dims );
+			final ShmImg<UnsignedByteType> shimg = new ShmImg<>( new UnsignedByteType(), dims );
+			final ShmImg<UnsignedByteType> shout = new ShmImg<>( new UnsignedByteType(), dims );
 			
 		
 			final Cellpose4Parameters params = Cellpose4Parameters.builder()
@@ -113,7 +106,7 @@ public class EnvironmentTest
 			final String pythonScriptPath = "/cp4.py";
 			final String pythonInitScriptPath = "/cp4_init.py";
 		
-			CellposeRunner<UnsignedByteType, UnsignedByteType> cprun = new CellposeRunner<>(
+			final CellposeRunner<UnsignedByteType, UnsignedByteType> cprun = new CellposeRunner<>(
 					params,
 					pythonInitScriptPath,
 					pythonScriptPath,
