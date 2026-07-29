@@ -8,7 +8,7 @@ Running Cellpose 3 and 4 from Java with [Appose](https://apposed.org/), using [I
 
 This small library is meant as a go to for Java developers who want to use Cellpose in their projects, without having to worry about the details of how to call Python from Java.
 The use of ImgLib2 lightweight data structure allows being agnostic to how images are managed in your final application.
-To see an example in Fiji plugin on this library, check the [Cellpose-Appose](https://imagej.net/plugins/fiji-cellpose) plugin.
+To see an example in Fiji plugin on this library, check the [Fiji-Cellpose](https://imagej.net/plugins/fiji-cellpose) plugin.
 
 ## Appose and running the library the first time
 
