@@ -33,6 +33,7 @@
 package net.imglib2.cellpose;
 
 import java.io.IOException;
+import java.io.File;
 
 import org.apposed.appose.BuildException;
 import org.apposed.appose.TaskException;
@@ -67,7 +68,7 @@ public class Cellpose
 	 * 
 	 * @param <T>
 	 *            the pixel type of the input image.
-	 * @param img
+	 * @param input
 	 *            the input image. X and Y axes must be at positions 0 and 1
 	 *            respectively.
 	 * @param axisInfo
@@ -758,12 +759,22 @@ public class Cellpose
 			// try to run nvidia-smi to check if it is available
 			final ProcessBuilder pb = new ProcessBuilder( "nvidia-smi" );
 			pb.redirectErrorStream( true );
+			// Only the exit code is used. The output must go somewhere the OS
+			// drains, not into a pipe: nvidia-smi's default output includes a
+			// table of every process holding a CUDA context, which can exceed
+			// the ~4 KB pipe buffer and block the child forever in waitFor().
+			pb.redirectOutput( new File( getOperatingSystem() == OperatingSystem.WINDOWS
+					? "NUL" : "/dev/null" ) );
 			final Process process = pb.start();
-			process.waitFor();
-			return process.exitValue() == 0;
+			return process.waitFor() == 0;
 		}
-		catch ( final IOException | InterruptedException e )
+		catch ( final IOException e )
 		{
+			return false;
+		}
+		catch ( final InterruptedException e )
+		{
+			Thread.currentThread().interrupt();
 			return false;
 		}
 	}
