@@ -103,7 +103,7 @@
 		<scijava.jvm.build.version>[21,)</scijava.jvm.build.version>
 
 		<appose.version>0.12.0</appose.version>
-		<imglib2-appose.version>0.9.0</imglib2-appose.version>
+		<imglib2-appose.version>0.10.0-SNAPSHOT</imglib2-appose.version>
 
 		<!-- NB: Deploy releases to the SciJava Maven repository. -->
 		<releaseProfiles>sign,deploy-to-scijava</releaseProfiles>
