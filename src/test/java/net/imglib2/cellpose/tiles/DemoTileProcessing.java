@@ -6,18 +6,18 @@
  * %%
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- * 
+ *
  * 3. Neither the name of the ImgLib2 nor the names of its contributors
  *    may be used to endorse or promote products derived from this software without
  *    specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -55,13 +55,13 @@ import ij.plugin.RGBStackMerge;
 import ij.process.ImageProcessor;
 import ij.process.LUT;
 import net.imglib2.Cursor;
+import net.imglib2.Dimensions;
 import net.imglib2.FinalDimensions;
+import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
 import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.appose.ShmImg;
-import net.imglib2.cellpose.ApposeTaskListener;
-import net.imglib2.cellpose.AxisInfo;
-import net.imglib2.cellpose.Cellpose;
+import net.imglib2.appose.util.ApposeTaskListener;
+import net.imglib2.appose.util.AxisInfo;
 import net.imglib2.cellpose.Cellpose3BuiltinModels;
 import net.imglib2.cellpose.Cellpose3Parameters;
 import net.imglib2.cellpose.CellposeRunner;
@@ -72,7 +72,7 @@ import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.IntegerType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
-import net.imglib2.util.ImgUtil;
+import net.imglib2.view.Views;
 import net.imglib2.view.fluent.RandomAccessibleIntervalView;
 
 public class DemoTileProcessing
@@ -142,17 +142,13 @@ public class DemoTileProcessing
 				{
 					futures.add( executor.submit( () -> {
 						try (
-								// Placeholders for tile processing.
-								final ShmImg< T > cellposeInputData = Cellpose.createInputShmImg( blockDims, img.getType() );
-								final ShmImg< UnsignedShortType > cellposeOutputData = Cellpose.createOutputLabelsShmImg( blockDims, axisInfo, new UnsignedShortType() );
 								// The runner.
-								final CellposeRunner< T, UnsignedShortType > runner = Cellpose.cellposeRunner(
+								final CellposeRunner< T, UnsignedShortType > runner = CellposeRunner.create(
 										params,
-										ApposeTaskListener.VOID,
-										cellposeInputData,
+										blockDims,
 										axisInfo,
-										cellposeOutputData,
-										null );)
+										img.getType(),
+										ApposeTaskListener.VOID );)
 						{
 							runner.init();
 
@@ -161,10 +157,11 @@ public class DemoTileProcessing
 							{
 
 								// Input tile -> Cellpose input data location.
-								copyInput( img, cellposeInputData, tileInterval );
+								copyInput( img, runner, tileInterval, blockDims );
 
 								// Run Cellpose.
 								runner.run();
+								final Img< UnsignedShortType > cellposeOutputData = runner.getOutputLabels();
 
 								// For display: separate closed label id
 								LabelShuffleUtil.shuffleLabelsInPlace( cellposeOutputData );
@@ -216,7 +213,7 @@ public class DemoTileProcessing
 	 * Copy the Cellpose output labels contained in the tile interval to the
 	 * output ImagePlus. The Cellpose output ShmImg is supposed to be at origin
 	 * (0, 0) and of size equal to the tile size.
-	 * 
+	 *
 	 * @param output
 	 *            the Cellpose output ShmImg containing the labels for the tile
 	 * @param target
@@ -248,7 +245,7 @@ public class DemoTileProcessing
 	 * Cellpose input ShmImg. The Cellpose image is supposed to be at origin (0,
 	 * 0) and of size equal to the tile size. The input image must be defined
 	 * over all the tile interval.
-	 * 
+	 *
 	 * @param <T>
 	 *            the pixel type
 	 * @param input
@@ -257,17 +254,21 @@ public class DemoTileProcessing
 	 *            the Cellpose input ShmImg
 	 * @param interval
 	 *            the tile interval
+	 * @param blockDims
+	 *            the dimensions of the input we defined the runner with
 	 */
-	private static < T extends RealType< T > & NativeType< T > > void copyInput( final Img< T > input, final ShmImg< T > target, final Interval interval )
+	private static < T extends RealType< T > & NativeType< T > > void copyInput(
+			final Img< T > input,
+			final CellposeRunner< T, UnsignedShortType > runner,
+			final Interval interval,
+			final Dimensions blockDims )
 	{
 		final RandomAccessibleIntervalView< T > viewInput = input.view()
 				.interval( interval )
 				.zeroMin();
-		final RandomAccessibleIntervalView< T > viewInputShmImg = target.view()
-				.translate( interval.minAsLongArray() )
-				.interval( interval )
-				.zeroMin();
-		ImgUtil.copy( viewInput, viewInputShmImg );
+		final Interval inputSize = new FinalInterval( blockDims );
+		final RandomAccessibleIntervalView< T > viewInputExtended = Views.extendZero( viewInput ).view().interval( inputSize );
+		runner.setInput( viewInputExtended );
 	}
 
 	private static LUT loadLutFromResource( final String resourcePath )

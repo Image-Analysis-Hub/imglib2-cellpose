@@ -6,18 +6,18 @@
  * %%
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- * 
+ *
  * 3. Neither the name of the ImgLib2 nor the names of its contributors
  *    may be used to endorse or promote products derived from this software without
  *    specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -39,94 +39,74 @@ import org.apposed.appose.TaskException;
 import org.junit.Assert;
 import org.junit.Test;
 
-import net.imglib2.appose.ShmImg;
+import net.imglib2.FinalDimensions;
+import net.imglib2.appose.util.ApposeTaskListener;
+import net.imglib2.appose.util.AxisInfo;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 
 /**
- * JUnit tests that check that the appose environment are correctly installed/activated.
+ * JUnit tests that check that the appose environment are correctly
+ * installed/activated.
  */
-public class EnvironmentTest 
+public class EnvironmentTest
 {
-	
-	@Test 
+
+	@Test
 	public void createEnvironmentCP3()
 	{
-		final int[] dims = new int[] { 300, 300 };
-		try {
-			final ShmImg<UnsignedByteType> shimg = new ShmImg<>( new UnsignedByteType(), dims );
-			final ShmImg<UnsignedByteType> shout = new ShmImg<>( new UnsignedByteType(), dims );
-			
-		
+		try
+		{
 			final Cellpose3Parameters params = Cellpose3Parameters.builder()
-				.model( Cellpose3BuiltinModels.CYTO2 )
-				.computeFlows( true )
-				.channels( 0, 0 )
-				.build();
-			final String envName = "cp3-cpu";
-			final String pythonScriptPath = "/cp3.py";
-			final String pythonInitScriptPath = "/cp3_init.py";
-		
-			final CellposeRunner<UnsignedByteType, UnsignedByteType> cprun = new CellposeRunner<>(
+					.model( Cellpose3BuiltinModels.CYTO2 )
+					.computeFlows( true )
+					.channels( 0, 0 )
+					.build();
+
+			final CellposeRunner< UnsignedByteType, UnsignedByteType > cprun = CellposeRunner.create(
 					params,
-					pythonInitScriptPath,
-					pythonScriptPath,
-					envName,
-					ApposeTaskListener.STD,
-					shimg,
+					new FinalDimensions( 300, 300 ),
 					AxisInfo.XY,
-					shout,
-					null );
-			
-				cprun.init();
-				cprun.close();
-			
+					new UnsignedByteType(),
+					new UnsignedByteType(),
+					ApposeTaskListener.STD );
+
+			cprun.init();
+			cprun.close();
 		}
 		catch ( BuildException | IOException | InterruptedException | TaskException e )
 		{
-			Assert.fail("Got an exception when installing environment CP3: "+e);
+			Assert.fail( "Got an exception when installing environment CP3: " + e );
 			e.printStackTrace();
 		}
-	
 	}
 
-	@Test 
+	@Test
 	public void createEnvironmentCP4()
 	{
-		final int[] dims = new int[] { 300, 300 };
-		try {
-			final ShmImg<UnsignedByteType> shimg = new ShmImg<>( new UnsignedByteType(), dims );
-			final ShmImg<UnsignedByteType> shout = new ShmImg<>( new UnsignedByteType(), dims );
-			
-		
+		try
+		{
 			final Cellpose4Parameters params = Cellpose4Parameters.builder()
-				.model( Cellpose4BuiltinModels.CPSAM )
-				.computeFlows( false )
-				.build();
-			final String envName = "cp4-cpu";
-			final String pythonScriptPath = "/cp4.py";
-			final String pythonInitScriptPath = "/cp4_init.py";
-		
-			final CellposeRunner<UnsignedByteType, UnsignedByteType> cprun = new CellposeRunner<>(
+					.model( Cellpose4BuiltinModels.CPSAM )
+					.computeFlows( false )
+					.build();
+
+			final CellposeRunner< UnsignedByteType, UnsignedByteType > cprun = CellposeRunner.create(
 					params,
-					pythonInitScriptPath,
-					pythonScriptPath,
-					envName,
-					ApposeTaskListener.STD,
-					shimg,
+					new FinalDimensions( 300, 300 ),
 					AxisInfo.XY,
-					shout,
-					null );
-			
-				cprun.init();
-				cprun.close();
-			
+					new UnsignedByteType(),
+					new UnsignedByteType(),
+					ApposeTaskListener.STD );
+
+			cprun.init();
+			cprun.close();
 		}
 		catch ( BuildException | IOException | InterruptedException | TaskException e )
 		{
-			Assert.fail("Got an exception when installing environment CP4: "+e);
+			Assert.fail( "Got an exception when installing environment CP4: " + e );
 			e.printStackTrace();
 		}
-	
+
 	}
 
 }

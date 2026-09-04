@@ -6,18 +6,18 @@
  * %%
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- * 
+ *
  * 3. Neither the name of the ImgLib2 nor the names of its contributors
  *    may be used to endorse or promote products derived from this software without
  *    specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -36,6 +36,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import net.imglib2.appose.ShmImg;
+import net.imglib2.appose.util.AxisInfo;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.IntegerType;
 import net.imglib2.type.numeric.RealType;
@@ -127,7 +128,7 @@ public abstract class CellposeParameters
 	/**
 	 * Creates a parameters map suitable for passing to Appose, using the
 	 * specified image as input, and the parameter values stored in this object.
-	 * 
+	 *
 	 * @param <T>
 	 *            the pixel type of the input image.
 	 * @param input
@@ -148,7 +149,7 @@ public abstract class CellposeParameters
 		inputs.put( "t_axis", axisInfoPython.T() < 0 ? null : axisInfoPython.T() );
 		inputs.put( "z_axis", axisInfoPython.Z() < 0 ? null : axisInfoPython.Z() );
 		inputs.put( "channel_axis", axisInfoPython.C() < 0 ? null : axisInfoPython.C() );
-		
+
 		// Outputs
 		inputs.put( "output_labels", outputLabels.ndArray() );
 		inputs.put( "output_flows", outputFlows == null ? null : outputFlows.ndArray() );

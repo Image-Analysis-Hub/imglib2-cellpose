@@ -6,18 +6,18 @@
  * %%
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- * 
+ *
  * 3. Neither the name of the ImgLib2 nor the names of its contributors
  *    may be used to endorse or promote products derived from this software without
  *    specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -43,7 +43,8 @@ import ij.IJ;
 import ij.ImageJ;
 import ij.ImagePlus;
 import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.appose.ShmImg;
+import net.imglib2.appose.util.ApposeTaskListener;
+import net.imglib2.appose.util.AxisInfo;
 import net.imglib2.img.Img;
 import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.img.display.imagej.ImageJFunctions;
@@ -52,7 +53,6 @@ import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.integer.UnsignedIntType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
-import net.imglib2.util.ImgUtil;
 
 public class BasicUsage
 {
@@ -60,8 +60,8 @@ public class BasicUsage
 	public static void main( final String[] args ) throws BuildException, IOException, InterruptedException, TaskException
 	{
 		basicUsage( args );
-//		outputType( args );
-//		cellposeRunner( args );
+		outputType( args );
+		cellposeRunner( args );
 	}
 
 	public static < T extends RealType< T > & NativeType< T > > void outputType( final String[] args ) throws BuildException, IOException, InterruptedException, TaskException
@@ -156,22 +156,12 @@ public class BasicUsage
 		// images are and the Cellpose runner are properly closed and cleaned up
 		// after use.
 		try (
-				// The tmp data location to pass input to Cellpose.
-				final ShmImg< UnsignedByteType > tmpInput = Cellpose.createInputShmImg( inputImages.get( 0 ) );
-				// The tmp data location to receive the Cellpose labels output.
-				final ShmImg< UnsignedShortType > tmpLabels = Cellpose.createOutputLabelsShmImg( tmpInput, axes, new UnsignedShortType() );
-				// The tmp data location to receive the Cellpose flows output.
-				final ShmImg< UnsignedByteType > tmpFlows = Cellpose.createOutputFlowsShmImg( tmpInput, axes );
-				// The Cellpose runner, initialized with the tmp data locations.
-				// Because we passed a Cellpose 3 parameter object, it will be a
-				// runner configured to run Cellpose 3.
-				final CellposeRunner< UnsignedByteType, UnsignedShortType > runner = Cellpose.cellposeRunner(
+				final CellposeRunner< UnsignedByteType, UnsignedShortType > runner = CellposeRunner.create(
 						params,
-						ApposeTaskListener.VOID,
-						tmpInput,
+						inputImages.get( 0 ),
 						axes,
-						tmpLabels,
-						tmpFlows ))
+						inputImages.get( 0 ).getType(),
+						ApposeTaskListener.VOID ))
 		{
 			System.out.println( String.format( "Runner and placeholders creation time: %.2f seconds", ( System.currentTimeMillis() - startTime ) / 1000. ) );
 
@@ -190,7 +180,7 @@ public class BasicUsage
 
 				// Copy the input image to the tmp location.
 				startTime = System.currentTimeMillis();
-				ImgUtil.copy( input, tmpInput );
+				runner.setInput( input );
 				System.out.println( String.format( "Input copy time: %.2f seconds", ( System.currentTimeMillis() - startTime ) / 1000. ) );
 
 				// Run Cellpose. The results will be written in the tmpLabels
@@ -202,7 +192,7 @@ public class BasicUsage
 				// Copy the output to a new image.
 				startTime = System.currentTimeMillis();
 				final RandomAccessibleInterval< UnsignedShortType > outputLabels = ArrayImgs.unsignedShorts( input.dimensionsAsLongArray() );
-				ImgUtil.copy( tmpLabels, outputLabels );
+				runner.getOutputLabels();
 				System.out.println( String.format( "Output copy to a new image time: %.2f seconds", ( System.currentTimeMillis() - startTime ) / 1000. ) );
 				outputImages.add( outputLabels );
 			}

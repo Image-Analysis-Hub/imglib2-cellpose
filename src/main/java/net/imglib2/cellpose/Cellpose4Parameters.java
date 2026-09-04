@@ -6,18 +6,18 @@
  * %%
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- * 
+ *
  * 3. Neither the name of the ImgLib2 nor the names of its contributors
  *    may be used to endorse or promote products derived from this software without
  *    specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -35,6 +35,7 @@ package net.imglib2.cellpose;
 import java.util.Map;
 
 import net.imglib2.appose.ShmImg;
+import net.imglib2.appose.util.AxisInfo;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.IntegerType;
 import net.imglib2.type.numeric.RealType;
@@ -43,7 +44,7 @@ import net.imglib2.type.numeric.integer.UnsignedByteType;
 public class Cellpose4Parameters extends CellposeParameters
 {
 	public final Cellpose4BuiltinModels buitInModel;
-	
+
 	public final Integer chan0; // as Integer so that it can be null
 
 	public final Integer chan1;
@@ -90,7 +91,7 @@ public class Cellpose4Parameters extends CellposeParameters
 			final ShmImg< R > outputLabels,
 			final ShmImg< UnsignedByteType > outputFlows )
 	{
-		
+
 		final Map< String, Object > inputs = super.toApposeMap( input, axisInfo, outputLabels, outputFlows );
 		final boolean isBuiltInModel = customModel == null || customModel.equals( "" );
 		inputs.put( "model_name", isBuiltInModel ? buitInModel.modelName() : null );
@@ -113,7 +114,7 @@ public class Cellpose4Parameters extends CellposeParameters
 	public static class Builder extends CellposeParameters.Builder< Builder >
 	{
 		private Cellpose4BuiltinModels model = Cellpose4BuiltinModels.CPSAMV2;
-		
+
 		public Builder model( final Cellpose4BuiltinModels model )
 		{
 			this.model = model;

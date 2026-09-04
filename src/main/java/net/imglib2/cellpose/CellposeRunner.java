@@ -6,18 +6,18 @@
  * %%
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- * 
+ *
  * 3. Neither the name of the ImgLib2 nor the names of its contributors
  *    may be used to endorse or promote products derived from this software without
  *    specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -32,197 +32,391 @@
  */
 package net.imglib2.cellpose;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
-import org.apache.commons.io.IOUtils;
-import org.apposed.appose.Appose;
-import org.apposed.appose.BuildException;
-import org.apposed.appose.Environment;
-import org.apposed.appose.Service;
-import org.apposed.appose.Service.Task;
-import org.apposed.appose.Service.TaskStatus;
 import org.apposed.appose.TaskException;
 
+import net.imglib2.Dimensions;
+import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.appose.ShmImg;
+import net.imglib2.appose.util.AbstractPixiRunner;
+import net.imglib2.appose.util.ApposeTaskListener;
+import net.imglib2.appose.util.AxisInfo;
+import net.imglib2.img.Img;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.IntegerType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
+import net.imglib2.type.numeric.integer.UnsignedShortType;
+import net.imglib2.util.ImgUtil;
+import net.imglib2.util.Util;
 
 /**
  * Specialized class that runs Cellpose. This class exists so that we can write
  * results in a pre-allocated output data structure.
- * <p>
- * Why this class? Normally we can run Cellpose on up to 3D or 2D+T images, with
- * or without C. As soon as we have 3D images over time as input, Cellpose will
- * crash. One solution is to have Cellpose process one time-point after another,
- * writing the results of processing one time-point in a pre-allocated output
- * data structure. This class is made to support this approach.
- * 
  */
-public class CellposeRunner< T extends RealType< T > & NativeType< T >, R extends IntegerType< R > & NativeType< R > > implements AutoCloseable
+public class CellposeRunner< T extends RealType< T > & NativeType< T >, R extends IntegerType< R > & NativeType< R > > extends AbstractPixiRunner
 {
 
-	private final String envName;
+	private final AxisInfo axisInfo;
 
-	private final String pythonScriptPath;
-	
-	private final String pythonInitScriptPath;
+	private final ShmImg< T > inputShm;
 
-	private final ApposeTaskListener listener;
+	private final ShmImg< R > outputLabelsShm;
 
-	private final Map< String, Object > inputsParams;
+	private final ShmImg< UnsignedByteType > outputFlowsShm;
 
-	private Service python;
+	private boolean processed = false;
 
-	private String cellposeScript;
-	
-
-	/**
-	 * Instantiates a Cellpose runner.
-	 * 
-	 * @param params
-	 *            the Cellpose parameters to use for running Cellpose.
-	 * @param pythonScriptPath
-	 *            the path to the Cellpose Python script.
-	 * @param envName
-	 *            the name of the Cellpose Python environment to use.
-	 * @param listener
-	 *            the listener to use for receiving updates from the Python
-	 *            script and environment deployment.
-	 * @param input
-	 *            a placeholder for the input image. Every <code>run()</code>
-	 *            call use the image data written in this placeholder.
-	 * @param inputAxisInfo
-	 *            the axis info of the input image. Will be used for every call
-	 *            to <code>run()</code>.
-	 * @param outputLabels
-	 *            a placeholder for the output labels image. Every
-	 *            <code>run()</code> call writes the labels results in this
-	 *            placeholder. It is the caller responsibility to ensure that
-	 *            this placeholder has the right dimensions and pixel type.
-	 * @param outputFlows
-	 *            a placeholder for the output flows image. Every
-	 *            <code>run()</code> call writes the flows results in this
-	 *            placeholder. It is the caller responsibility to ensure that
-	 *            this placeholder has the right dimensions. Can be
-	 *            <code>null</code> if flows are not computed.
-	 */
-	CellposeRunner( final CellposeParameters params,
-			final String pythonInitScriptPath,
-			final String pythonScriptPath,
+	private CellposeRunner(
+			final Map< String, Object > apposeMap,
+			final URL cellposeInitScriptPath,
+			final URL cellposeRunScriptPath,
 			final String envName,
+			final ShmImg< T > inputShm,
+			final ShmImg< R > outputLabelsShm,
+			final ShmImg< UnsignedByteType > outputFlowsShm,
 			final ApposeTaskListener listener,
-			final ShmImg< T > input,
-			final AxisInfo inputAxisInfo,
-			final ShmImg< R > outputLabels,
-			final ShmImg< UnsignedByteType > outputFlows )
+			final Dimensions input,
+			final AxisInfo axisInfo )
 	{
-		this.pythonScriptPath = pythonScriptPath;
-		this.pythonInitScriptPath = pythonInitScriptPath;
-		this.envName = envName;
-		this.listener = listener;
-		this.inputsParams = params.toApposeMap( input, inputAxisInfo, outputLabels, outputFlows );
+		super(
+				apposeMap,
+				CellposeRunner.class.getResource( "/pixi.toml" ),
+				CellposeRunner.class.getResource( "/cp_utils.py" ),
+				cellposeInitScriptPath,
+				cellposeRunScriptPath,
+				envName,
+				listener );
+		this.inputShm = inputShm;
+		this.outputLabelsShm = outputLabelsShm;
+		this.outputFlowsShm = outputFlowsShm;
+		this.axisInfo = axisInfo;
 	}
 
-	/**
-	 * Runs Cellpose on the input image currently written in the input
-	 * placeholder, and writes the results in the output placeholders, with the
-	 * parameters specified at construction time.
-	 * 
-	 * @throws InterruptedException
-	 *             if the thread is interrupted while waiting for the Python
-	 *             script to finish.
-	 * @throws TaskException
-	 *             if executing the Python script fails.
-	 */
-	public void run() throws InterruptedException, TaskException
+	public void setInput( final RandomAccessibleInterval< T > input )
 	{
-		// The Python task.
-		final Task task = python.task( cellposeScript, inputsParams );
-
-		final long start = System.currentTimeMillis();
-		// To catch update message from the python script
-		task.listen( listener.taskListener() );
-		task.start();
-		// Wait for task completion.
-		task.waitFor();
-
-		// Verify that it worked.
-		if ( task.status != TaskStatus.COMPLETE )
-			throw new RuntimeException( "Python script failed with error: " + task.error );
-
-		// Benchmark.
-		final long end = System.currentTimeMillis();
-		listener.message( "Model inference done in " + ( end - start ) / 1000. + " s" );
+		processed = false;
+		ImgUtil.copy( input, inputShm );
 	}
 
-	/**
-	 * Initializes the Cellpose runner. Must be called before calling run.
-	 * 
-	 * @throws IOException
-	 *             if there is an error reading the pixi.toml file.
-	 * @throws BuildException
-	 *             if there is an error building the environment.
-	 * @throws TaskException 
-	 * @throws InterruptedException 
-	 */
-	public void init() throws IOException, BuildException, InterruptedException, TaskException
+	@Override
+	public void run() throws InterruptedException, TaskException, IOException
 	{
-		// Python env. specifications.
-		final String cellposeEnv = pixiEnv();
+		super.run();
+		processed = true;
+	}
 
-		// Create Python env.
-		final Environment env = Appose
-				.pixi()
-				.content( cellposeEnv )
-				.subscribeProgress( listener.progressListener() )
-				.subscribeOutput( listener.outputListener() )
-				.subscribeError( listener.errorListener() )
-				.build();
-		final String utilsScript = IOUtils.toString( Cellpose.class.getResource( "/cp_utils.py" ), StandardCharsets.UTF_8 );
-		this.python = env.activate(envName).python().init( utilsScript );
+	public void getOutputLabels( final RandomAccessibleInterval< R > outputLabels )
+	{
+		if ( !processed )
+			throw new IllegalStateException( "The input image has been set but the task has not been run yet. Please execute run() first." );
+		ImgUtil.copy( outputLabelsShm, outputLabels );
+	}
 
-		// The Python initialization task.
-		final String cellposeInitScript =  IOUtils.toString( Cellpose.class.getResource( pythonInitScriptPath ), StandardCharsets.UTF_8 );
-		final Task task = python.task( cellposeInitScript, inputsParams );
+	public Img< R > getOutputLabels()
+	{
+		final Img< R > outputLabels = Util.getArrayOrCellImgFactory( outputLabelsShm, outputLabelsShm.getType() ).create( outputLabelsShm );
+		getOutputLabels( outputLabels );
+		return outputLabels;
+	}
 
-		final long start = System.currentTimeMillis();
-		// To catch update message from the python script
-		task.listen( listener.taskListener() );
-		task.start();
-		// Wait for task completion.
-		task.waitFor();
+	public void getOutputFlows( final RandomAccessibleInterval< UnsignedByteType > outputFlows )
+	{
+		if ( !processed )
+			throw new IllegalStateException( "The input image has been set but the task has not been run yet. Please execute run() first." );
+		if ( outputFlowsShm == null )
+			throw new IllegalStateException( "Output flows were not computed." );
+		ImgUtil.copy( outputFlowsShm, outputFlows );
+	}
 
-		// Verify that it worked.
-		if ( task.status != TaskStatus.COMPLETE )
-			throw new RuntimeException( "Python script failed with error: " + task.error );
+	public Img< UnsignedByteType > getOutputFlows()
+	{
+		if ( outputFlowsShm == null )
+			throw new IllegalStateException( "Output flows were not computed." );
+		final Img< UnsignedByteType > outputFlows = Util.getArrayOrCellImgFactory( outputFlowsShm, outputFlowsShm.getType() ).create( outputFlowsShm );
+		getOutputFlows( outputFlows );
+		return outputFlows;
+	}
 
-		// Benchmark.
-		final long end = System.currentTimeMillis();
-		listener.message( "Cellpose initialization done in " + ( end - start ) / 1000. + " s" );
-		
-		// The runner script
-		this.cellposeScript = IOUtils.toString( Cellpose.class.getResource( pythonScriptPath ), StandardCharsets.UTF_8 );
+	public CellposeOutput< R > getOutput()
+	{
+		final Img< R > outputLabels = getOutputLabels();
+		final Img< UnsignedByteType > outputFlows = outputFlowsShm != null ? getOutputFlows() : null;
+		final AxisInfo axesLabels = axisInfo.removeChannelDim();
+		final AxisInfo axesFlows = axesLabels.insertChannelDim( 2 );
+		return new CellposeOutput<>( outputLabels, axesLabels, outputFlows, axesFlows );
 	}
 
 	@Override
 	public void close()
 	{
-		python.close();
+		super.close();
+		inputShm.close();
+		outputLabelsShm.close();
+		if ( outputFlowsShm != null )
+			outputFlowsShm.close();
+	}
+
+	public static < T extends RealType< T > & NativeType< T > > CellposeRunner< T, UnsignedShortType > create(
+			final Cellpose3Parameters params,
+			final Dimensions dimension,
+			final AxisInfo axisInfo,
+			final T inputType,
+			final ApposeTaskListener listener )
+	{
+		return create( params, dimension, axisInfo, inputType, new UnsignedShortType(), listener );
+	}
+
+	public static < T extends RealType< T > & NativeType< T >, R extends IntegerType< R > & NativeType< R > > CellposeRunner< T, R > create(
+			final Cellpose3Parameters params,
+			final Dimensions dimension,
+			final AxisInfo axisInfo,
+			final T inputType,
+			final R outputType,
+			final ApposeTaskListener listener )
+	{
+		final ShmImg< T > inputShm = createInputShmImg( dimension, inputType );
+		final ShmImg< R > outputLabelsShm = createOutputLabelsShmImg( dimension, axisInfo, outputType );
+		final ShmImg< UnsignedByteType > outputFlowsShm;
+		if ( params.computeFlows )
+			outputFlowsShm = createOutputFlowsShmImg( dimension, axisInfo );
+		else
+			outputFlowsShm = null;
+		final Map< String, Object > apposeMap = params.toApposeMap( inputShm, axisInfo, outputLabelsShm, outputFlowsShm );
+		final String envName = "cp3-" + getTorchInstallSuffix( params.torchVersion );
+		return new CellposeRunner< T, R >(
+				apposeMap,
+				CellposeRunner.class.getResource( "/cp3_init.py" ),
+				CellposeRunner.class.getResource( "/cp3.py" ),
+				envName,
+				inputShm,
+				outputLabelsShm,
+				outputFlowsShm,
+				listener,
+				dimension,
+				axisInfo );
+	}
+
+	public static < T extends RealType< T > & NativeType< T >, R extends IntegerType< R > & NativeType< R > > CellposeRunner< T, R > create(
+			final Cellpose4Parameters params,
+			final Dimensions dimension,
+			final AxisInfo axisInfo,
+			final T inputType,
+			final R outputType,
+			final ApposeTaskListener listener )
+	{
+		final ShmImg< T > inputShm = createInputShmImg( dimension, inputType );
+		final ShmImg< R > outputLabelsShm = createOutputLabelsShmImg( dimension, axisInfo, outputType );
+		final ShmImg< UnsignedByteType > outputFlowsShm;
+		if ( params.computeFlows )
+			outputFlowsShm = createOutputFlowsShmImg( dimension, axisInfo );
+		else
+			outputFlowsShm = null;
+		final Map< String, Object > apposeMap = params.toApposeMap( inputShm, axisInfo, outputLabelsShm, outputFlowsShm );
+		final String envName = "cp4-" + getTorchInstallSuffix( params.torchVersion );
+		return new CellposeRunner< T, R >(
+				apposeMap,
+				CellposeRunner.class.getResource( "/cp4_init.py" ),
+				CellposeRunner.class.getResource( "/cp4.py" ),
+				envName,
+				inputShm,
+				outputLabelsShm,
+				outputFlowsShm,
+				listener,
+				dimension,
+				axisInfo );
+	}
+
+	public static < T extends RealType< T > & NativeType< T > > CellposeRunner< T, UnsignedShortType > create(
+			final Cellpose4Parameters params,
+			final Dimensions dimension,
+			final AxisInfo axisInfo,
+			final T inputType,
+			final ApposeTaskListener listener )
+	{
+		return create( params, dimension, axisInfo, inputType, new UnsignedShortType(), listener );
 	}
 
 	/**
-	 * Returns the content of the pixi.toml file to build the environment return
-	 * throws IOException
+	 * Creates an empty shared memory image with the specified dimensions and
+	 * pixel type.
+	 *
+	 * @param <T>
+	 *            the pixel type.
+	 * @param input
+	 *            the dimensions.
+	 * @param type
+	 *            the pixel type.
+	 * @return a new ShmImg.
 	 */
-	public static String pixiEnv() throws IOException
+	private static < T extends RealType< T > & NativeType< T > > ShmImg< T > createInputShmImg( final Dimensions input, final T type )
 	{
-		final URL pixiFile = CellposeRunner.class.getResource( "/pixi.toml" );
-		final String env = IOUtils.toString( pixiFile, StandardCharsets.UTF_8 );
-		return env;
+		final long[] dims = input.dimensionsAsLongArray();
+		final int[] dims2 = new int[ dims.length ];
+		for ( int i = 0; i < dims.length; i++ )
+			dims2[ i ] = ( int ) dims[ i ];
+		return new ShmImg<>( type, dims2 );
+	}
+
+	/**
+	 * Creates a shared memory image suitable to hold flows output, with the
+	 * right dimensions for the specified image input.
+	 *
+	 * @param input
+	 *            the input image.
+	 * @param axisInfo
+	 *            the AxisInfo of the input image.
+	 * @return a new ShmImg.
+	 */
+	private static ShmImg< UnsignedByteType > createOutputFlowsShmImg( final Dimensions input, final AxisInfo axisInfo )
+	{
+		final long[] dims = input.dimensionsAsLongArray();
+		if ( axisInfo.C() < 0 )
+		{
+			final int[] dims2 = new int[ dims.length + 1 ];
+			dims2[ 0 ] = ( int ) dims[ 0 ];
+			dims2[ 1 ] = ( int ) dims[ 1 ];
+			dims2[ 2 ] = 3; // 3 channels for the flows.
+			for ( int i = 2; i < dims.length; i++ )
+				dims2[ i + 1 ] = ( int ) dims[ i ];
+			return new ShmImg<>( new UnsignedByteType(), dims2 );
+		}
+		final int[] dims2 = new int[ dims.length ];
+		for ( int i = 0; i < dims.length; i++ )
+		{
+			if ( i == axisInfo.C() )
+				dims2[ i ] = 3; // 3 channels for the flows.
+			else
+				dims2[ i ] = ( int ) dims[ i ];
+		}
+		return new ShmImg<>( new UnsignedByteType(), dims2 );
+	}
+
+	/**
+	 * Creates a shared memory image suitable to hold labels output, with the
+	 * right dimensions for the specified image input.
+	 *
+	 * @param <R>
+	 *            the pixel type of the output label image.
+	 * @param input
+	 *            the input image.
+	 * @param axisInfo
+	 *            the AxisInfo of the input image.
+	 * @param outputType
+	 *            the desired pixel type for the output labels image. It can be
+	 *            either UnsignedShortType or UnsignedIntType (if the number of
+	 *            labels in one image is larger than 65k).
+	 * @return a new ShmImg.
+	 */
+	private static < R extends IntegerType< R > & NativeType< R > > ShmImg< R > createOutputLabelsShmImg( final Dimensions input, final AxisInfo axisInfo, final R outputType )
+	{
+		final long[] dims = input.dimensionsAsLongArray();
+		if ( axisInfo.C() < 0 )
+		{
+			final int[] dims2 = new int[ dims.length ];
+			for ( int i = 0; i < dims.length; i++ )
+				dims2[ i ] = ( int ) dims[ i ];
+			return new ShmImg< R >( outputType, dims2 );
+		}
+		// We drop the channel dim.
+		final int[] dims2 = new int[ dims.length - 1 ];
+		int j = 0;
+		for ( int i = 0; i < dims.length; i++ )
+		{
+			if ( i != axisInfo.C() )
+			{
+				dims2[ j ] = ( int ) dims[ i ];
+				j++;
+			}
+		}
+		return new ShmImg< R >( outputType, dims2 );
+	}
+
+	/**
+	 * Filters and returns the suffix to use for installing the correct version
+	 * of PyTorch.
+	 * <p>
+	 * This method checks the operating system and CUDA availability to
+	 * determine the appropriate suffix for installing PyTorch. If you are on a
+	 * Mac or do not have CUDA available, it returns "cpu". Otherwise, it
+	 * returns the specified torchVersion.
+	 *
+	 * @param torchVersion
+	 *            the version of PyTorch to install if CUDA is available.
+	 * @return the suffix to use for installing the correct version of PyTorch.
+	 */
+	private static String getTorchInstallSuffix( final String torchVersion )
+	{
+		// if MacOS, return "-cpu"
+		if ( getOperatingSystem() == OperatingSystem.MACOS )
+			return "cpu";
+
+		if ( !hasCUDA() )
+			return "cpu";
+
+		return torchVersion;
+	}
+
+	/** Enum representing the main operating systems. */
+	public enum OperatingSystem
+	{
+		WINDOWS, LINUX, MACOS, UNKNOWN
+	}
+
+	/**
+	 * Returns the current operating system.
+	 *
+	 * @return the current operating system.
+	 */
+	private static OperatingSystem getOperatingSystem()
+	{
+		final String os = System.getProperty( "os.name" ).toLowerCase();
+		if ( os.contains( "mac" ) || os.contains( "darwin" ) )
+			return OperatingSystem.MACOS;
+		if ( os.contains( "win" ) )
+			return OperatingSystem.WINDOWS;
+		if ( os.contains( "nux" ) || os.contains( "nix" ) || os.contains( "aix" ) )
+			return OperatingSystem.LINUX;
+		return OperatingSystem.UNKNOWN;
+	}
+
+	/**
+	 * Checks if CUDA is available on the system by trying to execute
+	 * {@code nvidia-smi}. This method returns {@code false} on macOS, as CUDA
+	 * is not supported on that platform.
+	 *
+	 * @return {@code true} if CUDA is available, {@code false} otherwise.
+	 */
+	private static Boolean hasCUDA()
+	{
+		if ( getOperatingSystem() == OperatingSystem.MACOS )
+			return false;
+		try
+		{
+			// try to run nvidia-smi to check if it is available
+			final ProcessBuilder pb = new ProcessBuilder( "nvidia-smi" );
+			pb.redirectErrorStream( true );
+			// Only the exit code is used. The output must go somewhere the OS
+			// drains, not into a pipe: nvidia-smi's default output includes a
+			// table of every process holding a CUDA context, which can exceed
+			// the ~4 KB pipe buffer and block the child forever in waitFor().
+			pb.redirectOutput( new File( getOperatingSystem() == OperatingSystem.WINDOWS
+					? "NUL" : "/dev/null" ) );
+			final Process process = pb.start();
+			return process.waitFor() == 0;
+		}
+		catch ( final IOException e )
+		{
+			return false;
+		}
+		catch ( final InterruptedException e )
+		{
+			Thread.currentThread().interrupt();
+			return false;
+		}
 	}
 }

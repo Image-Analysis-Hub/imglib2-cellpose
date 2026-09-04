@@ -6,18 +6,18 @@
  * %%
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- * 
+ *
  * 3. Neither the name of the ImgLib2 nor the names of its contributors
  *    may be used to endorse or promote products derived from this software without
  *    specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -68,7 +68,7 @@ import net.imglib2.view.Views;
  * {@link #finish()} relabels only the union bounding box of the tile intervals
  * that were added, and {@link #snapshotInto(RandomAccessibleInterval)} writes
  * only within the interval of the provided target.
- * 
+ *
  * @param <R>
  *            canvas pixel type
  */
@@ -143,7 +143,7 @@ public class LabelTileMerger< R extends IntegerType< R > >
 	 * threads, but each call will be processed sequentially. This is required
 	 * to maintain a consistent merger state.
 	 *
-	 * @param inputTile
+	 * @param runner
 	 *            label tile to merge. The input tile is not modified by this
 	 *            method; its pixels are only read.
 	 * @param interval
@@ -151,7 +151,7 @@ public class LabelTileMerger< R extends IntegerType< R > >
 	 *            canvas.
 	 * @param <T>
 	 *            tile pixel type.
-	 * 
+	 *
 	 * @throws IllegalStateException
 	 *             if {@code finish()} has already been called.
 	 */
